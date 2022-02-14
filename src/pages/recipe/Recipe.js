@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useFetch } from '../../hook/useFetch';
+//import { useFetch } from '../../hook/useFetch';
 import { useTheme } from '../../hook/useTheme';
+import { projectFirestore } from '../../firebase/config';
 
 
 // Style
@@ -9,8 +11,26 @@ import './Recipe.css'
 export default function Recipe() {
 
   const { id } = useParams()
-  const { data: recipe, isPending, error } = useFetch(`http://localhost:3000/recipes/${id}`)
+  // const { data: recipe, isPending, error } = useFetch(`http://localhost:3000/recipes/${id}`)
   const { mode } = useTheme
+
+  const [recipe, setRecipe] = useState(null)
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    setIsPending(true)
+
+    projectFirestore.collection('recipes').doc(id).get().then((doc) => {
+      if (doc.exists) {
+        setIsPending(false)
+        setRecipe(doc.data())
+      } else {
+        setIsPending(false)
+        setError('Could not find that recipe')
+      }
+    })
+  }, [id])
 
   return (
     <div className={`recipe ${mode}`}>
